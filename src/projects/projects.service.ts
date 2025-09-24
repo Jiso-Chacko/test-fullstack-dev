@@ -139,7 +139,6 @@ export class ProjectsService {
             return project;
 
         }catch (error) {
-            console.log("My error happened", error);
             this.logger.error(error.message, error.stack, "ProjectsService");
             throw error
         }

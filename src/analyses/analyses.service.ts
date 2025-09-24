@@ -102,7 +102,6 @@ export class AnalysesService {
                 where: { id: analysisId },
                 include: {
                     project:{
-                        select: { id: true, name: true },
                         include: {
                             accesses: { select: { userId: true } },
                         }
