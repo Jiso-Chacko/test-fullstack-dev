@@ -16,10 +16,101 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
+  afterAll(async () => {
+      await app.close();
+  })
+
+    describe('Projects API', () => {
+        it('should require authentication for /projects', () => {
+            return request(app.getHttpServer())
+                .get('/projects')
+                .expect(401); // Should fail without auth header
+        });
+
+        it('should allow authenticated access to /projects', () => {
+            return request(app.getHttpServer())
+                .get('/projects')
+                .set('x-user-id', '1') // Super Admin
+                .expect(200);
+        });
+
+        it('should validate project creation data', () => {
+            return request(app.getHttpServer())
+                .post('/projects')
+                .set('x-user-id', '2') // Admin
+                .send({ name: '' }) // empty name
+                .expect(400);
+        });
+
+        it('should allow admin to create project', () => {
+            return request(app.getHttpServer())
+                .post('/projects')
+                .set('x-user-id', '2') // Admin
+                .send({
+                    name: 'Test Project',
+                    userIds: []
+                })
+                .expect(201)
+                .expect((res) => {
+                    expect(res.body.name).toBe('Test Project');
+                });
+        });
+
+        it('should forbid user from creating project', () => {
+            return request(app.getHttpServer())
+                .post('/projects')
+                .set('x-user-id', '4') // Regular user
+                .send({
+                    name: 'Test Project',
+                    userIds: []
+                })
+                .expect(403);
+        });
+    });
+
+    describe('Analyses API', () => {
+        it('should require authentication for analyses', () => {
+            return request(app.getHttpServer())
+                .get('/projects/1/analyses')
+                .expect(401);
+        });
+
+        it('should allow authenticated access to analyses', () => {
+            return request(app.getHttpServer())
+                .get('/projects/1/analyses')
+                .set('x-user-id', '2') // Admin who owns project 1
+                .expect(200);
+        });
+
+        it('should validate analysis creation data', () => {
+            return request(app.getHttpServer())
+                .post('/projects/1/analyses')
+                .set('x-user-id', '2') // Admin
+                .send({ name: '' }) // Invalid - empty name
+                .expect(400);
+        });
+    });
+
+    describe('Authentication', () => {
+        it('should work with user email header', () => {
+            return request(app.getHttpServer())
+                .get('/projects')
+                .set('x-user-email', 'superadmin@test.com')
+                .expect(200);
+        });
+
+        it('should reject invalid user ID', () => {
+            return request(app.getHttpServer())
+                .get('/projects')
+                .set('x-user-id', '999') // Non-existent user
+                .expect(401);
+        });
+
+        it('should reject invalid user email', () => {
+            return request(app.getHttpServer())
+                .get('/projects')
+                .set('x-user-email', 'nonexistent@test.com')
+                .expect(401);
+        });
+    });
 });
