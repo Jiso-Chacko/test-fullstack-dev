@@ -1,24 +1,24 @@
-# Nricher API - Full-Stack Developer Test
+# Nricher API
 
 A NestJS REST API for project and analysis management with role-based access control.
 
 ## Features
 
-- **Role-based Access Control**: Super Admin, Admin, and User roles with specific permissions
-- **Project Management**: CRUD operations for projects with ownership and sharing
-- **Analysis Management**: CRUD operations for analyses within projects
+- **Role-based Access Control**: Super Admin, Admin, and User roles
+- **Project Management**: CRUD operations for projects management
+- **Analysis Management**: CRUD operations for analyses created under projects
 - **Header-based Authentication**: Simplified authentication via x-user-id or x-user-email
 - **Input Validation**: Request validation using class-validator
 - **Error Handling**: Comprehensive error handling with logging
-- **API Documentation**: Interactive
-- **Database**: SQLite with prisma ORM
+- **API Documentation**: Swagger API documentation, with live testing
+- **Database**: SQLite integrated using prisma ORM
 
 ## Quick Start
 ### 1. Installation
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd nricher-api-test
+git clone https://github.com/Jiso-Chacko/test-fullstack-dev.git
+cd test-fullstack-dev
 
 # Install dependencies
 npm install
@@ -46,9 +46,6 @@ npx prisma studio
 ```bash
 # Development mode
 npm run start:dev
-
-# Production mode  
-npm run start:prod
 ```
 
 ### 4. API Documentation
@@ -59,12 +56,12 @@ npm run start:prod
 
 ### Models
 - **User**: Stores user information and roles
-- **Project**: Projects owned by users with sharing capabilities
-- **Analysis**: Analyses belonging to projects
+- **Project**: Projects owned by users which can be shared with other users
+- **Analysis**: Project analysis
 - **ProjectAccess**: Many-to-many relationship for project sharing
 
 ### Authentication
-The API uses simplified header-based authentication. Include one of these headers:
+The API uses simplified header-based authentication:
 - `x-user-id`: User ID (number)
 - `x-user-email`: User email (string)
 
@@ -139,7 +136,7 @@ Application logs are written to:
 
 ### Database
 
-- SQLite: Simple setup for development/testing
+- SQLite: Simple setup for testing
 - Prisma ORM: Provides convenient and safe access to database with migrations 
 - Seeded Data: Sample data is provide to address cold start
 
