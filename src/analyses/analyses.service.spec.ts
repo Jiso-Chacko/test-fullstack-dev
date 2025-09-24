@@ -18,7 +18,7 @@ describe('AnalysesService', () => {
             project: {
                 findUnique: jest.fn(),
             },
-            analysis: {
+            analyses: {
                 create: jest.fn(),
                 findMany: jest.fn(),
             },
@@ -53,7 +53,7 @@ describe('AnalysesService', () => {
         it('should allow SUPER_ADMIN to create analysis', async () => {
             prismaService.project.findUnique.mockResolvedValue(mockProject);
             const mockAnalysis = { id: 1, name: 'Test Analysis', projectId: 1 };
-            prismaService.analysis.create.mockResolvedValue(mockAnalysis);
+            prismaService.analyses.create.mockResolvedValue(mockAnalysis);
 
             const result = await service.create(1, createAnalysisDto, mockSuperAdmin);
             expect(result).toEqual(mockAnalysis);
@@ -62,7 +62,7 @@ describe('AnalysesService', () => {
         it('should allow ADMIN to create analysis in own project', async () => {
             prismaService.project.findUnique.mockResolvedValue(mockProject);
             const mockAnalysis = { id: 1, name: 'Test Analysis', projectId: 1 };
-            prismaService.analysis.create.mockResolvedValue(mockAnalysis);
+            prismaService.analyses.create.mockResolvedValue(mockAnalysis);
 
             const result = await service.create(1, createAnalysisDto, mockAdmin);
             expect(result).toEqual(mockAnalysis);
@@ -94,7 +94,7 @@ describe('AnalysesService', () => {
             const mockAnalyses = [{ id: 1, name: 'Test Analysis' }];
 
             prismaService.project.findUnique.mockResolvedValue(mockProject);
-            prismaService.analysis.findMany.mockResolvedValue(mockAnalyses);
+            prismaService.analyses.findMany.mockResolvedValue(mockAnalyses);
 
             const result = await service.findAllByProject(1, mockUser);
             expect(result).toEqual(mockAnalyses);
