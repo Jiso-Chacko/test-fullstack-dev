@@ -14,12 +14,16 @@ import { CreateAnalysesDto } from "./dto/create-analyses.dto";
 import { UpdateAnalysesDto } from "./dto/update-analyses.dto";
 import { AuthGuard } from "../common/guards/auth.guard";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { CustomLoggerService } from "../common/logger/logger.service";
 import type { User } from '@prisma/client'
 
 @Controller('projects/:projectId/analyses')
 @UseGuards(AuthGuard)
 export class AnalysesController {
-    constructor(private readonly analysesService: AnalysesService) {}
+    constructor(
+        private readonly analysesService: AnalysesService,
+        private logger: CustomLoggerService
+    ) {}
 
     @Post()
     async create(
@@ -27,7 +31,12 @@ export class AnalysesController {
         @Body() createAnalysesDto: CreateAnalysesDto,
         @CurrentUser() user: User
     ){
-        return this.analysesService.create(projectId, createAnalysesDto, user)
+        try {
+            return this.analysesService.create(projectId, createAnalysesDto, user)
+        }catch (error){
+            this.logger.error(error.message, error.stack, "AnalysesController");
+            throw error;
+        }
     }
 
     @Get()
@@ -35,7 +44,12 @@ export class AnalysesController {
         @Param('projectId', ParseIntPipe) projectId: number,
         @CurrentUser() user: User
     ) {
-        return this.analysesService.findAllByProject(projectId, user)
+        try {
+            return this.analysesService.findAllByProject(projectId, user)
+        }catch (error){
+            this.logger.error(error.message, error.stack, "AnalysesController");
+            throw error;
+        }
     }
 
     @Get(':id')
@@ -43,7 +57,12 @@ export class AnalysesController {
         @Param('projectId', ParseIntPipe) projectId: number,
         @Param('id', ParseIntPipe) id: number,
         @CurrentUser() user: User){
-        return this.analysesService.findOne(projectId, id, user)
+        try {
+            return this.analysesService.findOne(projectId, id, user)
+        }catch (error){
+            this.logger.error(error.message, error.stack, "AnalysesController");
+            throw error;
+        }
     }
 
     @Patch(':id')
@@ -53,7 +72,12 @@ export class AnalysesController {
         @Body() updateAnalysesDto: UpdateAnalysesDto,
         @CurrentUser() user: User
     ){
-        return this.analysesService.update(projectId, id, updateAnalysesDto, user)
+        try {
+            return this.analysesService.update(projectId, id, updateAnalysesDto, user)
+        }catch (error){
+            this.logger.error(error.message, error.stack, "AnalysesController");
+            throw error;
+        }
     }
 
     @Delete(':id')
@@ -62,7 +86,12 @@ export class AnalysesController {
         @Param('id', ParseIntPipe) id: number,
         @CurrentUser() user: User
     ){
-        return this.analysesService.remove(projectId, id, user)
+        try {
+            return this.analysesService.remove(projectId, id, user)
+        }catch (error){
+            this.logger.error(error.message, error.stack, "AnalysesController");
+            throw error;
+        }
     }
 
 }

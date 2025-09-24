@@ -2,20 +2,20 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
+import { CustomLoggerService } from "../common/logger/logger.service";
 import { User, Role, Project } from '@prisma/client'
+import {error} from "winston";
 
 @Injectable()
 export class ProjectsService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private logger: CustomLoggerService
+    ) {}
 
     private checkProjectAccess(project: any, user: User): boolean {
-        if (user.role === Role.SUPER_ADMIN) {
-            return true;
-        }
-
-        if (project.ownerId === user.id) {
-            return true;
-        }
+        if (user.role === Role.SUPER_ADMIN) return true
+        if (project.ownerId === user.id) return true;
 
         const hasExplicitAccess = project.accesses?.some(
             (access) => access.userId === user.id,
@@ -25,139 +25,160 @@ export class ProjectsService {
     }
 
     async create(createProjectDto: CreateProjectDto, user: User) {
-        if (user.role == Role.USER) throw new ForbiddenException("Access denied")
-        console.log("Inside creation");
-        console.log("createProjectDto", createProjectDto);
-        const { userIds, ...projectData } = createProjectDto;
+        try {
+            if (user.role == Role.USER) throw new ForbiddenException("Access denied")
+            const {userIds, ...projectData} = createProjectDto;
 
-        const project = await this.prisma.project.create({
-            data: {
-                ...projectData,
-                ownerId: user.id
-            },
-            include: {
-                owner: {
-                    select: { id: true, name: true, email: true },
+            const project = await this.prisma.project.create({
+                data: {
+                    ...projectData,
+                    ownerId: user.id
+                },
+                include: {
+                    owner: {
+                        select: {id: true, name: true, email: true},
+                    }
                 }
-            }
-        })
-
-        // Explicit access
-        if (userIds && userIds.length > 0) {
-            await this.prisma.projectAccess.createMany({
-                data: userIds.map((userId) => ({
-                    projectId: project.id,
-                    userId: userId,
-                }))
             })
+
+            // Explicit access
+            if (userIds && userIds.length > 0) {
+                await this.prisma.projectAccess.createMany({
+                    data: userIds.map((userId) => ({
+                        projectId: project.id,
+                        userId: userId,
+                    }))
+                })
+            }
+            return project;
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsService");
         }
-        return project;
     }
 
     async findAll(user: User) {
-        console.log("Inside project service")
-        console.log("user", user)
-        if (user.role == Role.SUPER_ADMIN){
-            return this.prisma.project.findMany({
-                include: {
-                    owner: {
-                        select: { id: true, name: true, email: true },
-                    },
-                    analyses: {
-                        select: { id: true, name: true, createdAt: true },
+        try {
+            if (user.role == Role.SUPER_ADMIN){
+                return this.prisma.project.findMany({
+                    include: {
+                        owner: {
+                            select: { id: true, name: true, email: true },
+                        },
+                        analyses: {
+                            select: { id: true, name: true, createdAt: true },
+                        }
                     }
-                }
-            })
-        }
+                })
+            }
 
-        if (user.role == Role.ADMIN){
+            if (user.role == Role.ADMIN){
+                return this.prisma.project.findMany({
+                    where: {
+                        OR: [
+                            {ownerId: user.id},
+                            {accesses: { some: { userId: user.id } }}
+                        ]
+                    },
+                    include: {
+                        owner: {
+                            select: { id: true, name: true, email: true },
+                        },
+                        analyses: {
+                            select: { id: true, name: true, createdAt: true },
+                        }
+                    }
+                })
+            }
+
             return this.prisma.project.findMany({
                 where: {
-                    OR: [
-                        {ownerId: user.id},
-                        {accesses: { some: { userId: user.id } }}
-                    ]
+                    accesses: { some: { userId: user.id } },
                 },
                 include: {
                     owner: {
-                        select: { id: true, name: true, email: true },
+                        select: { id: true, name: true, createdAt: true },
                     },
                     analyses: {
                         select: { id: true, name: true, createdAt: true },
                     }
                 }
             })
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsService");
         }
 
-        return this.prisma.project.findMany({
-            where: {
-                accesses: { some: { userId: user.id } },
-            },
-            include: {
-                owner: {
-                    select: { id: true, name: true, createdAt: true },
-                },
-                analyses: {
-                    select: { id: true, name: true, createdAt: true },
-                }
-            }
-        })
     }
 
     async  findOne(id: number, user: User) {
-        const project = await  this.prisma.project.findUnique({
-            where: { id },
-            include: {
-                owner: {
-                    select: { id: true, name: true, email: true },
-                },
-                analyses: {
-                    select: { id: true, name: true, createdAt: true },
-                },
-                accesses: {
-                    include: {
-                        user: {
-                            select: { id: true, name: true, email: true },
+        try {
+            const project = await  this.prisma.project.findUnique({
+                where: { id },
+                include: {
+                    owner: {
+                        select: { id: true, name: true, email: true },
+                    },
+                    analyses: {
+                        select: { id: true, name: true, createdAt: true },
+                    },
+                    accesses: {
+                        include: {
+                            user: {
+                                select: { id: true, name: true, email: true },
+                            }
                         }
                     }
                 }
-            }
-        })
+            })
 
-        if (!project) throw  new NotFoundException("Project not Found!");
+            if (!project) throw  new NotFoundException("Project not Found!");
 
-        const hasAccess = this.checkProjectAccess(project, user)
-        if (!hasAccess) throw new ForbiddenException("Access denied")
+            const hasAccess = this.checkProjectAccess(project, user)
+            if (!hasAccess) throw new ForbiddenException("Access denied")
 
-        return project;
+            return project;
+
+        }catch (error) {
+            console.log("My error happened", error);
+            this.logger.error(error.message, error.stack, "ProjectsService");
+            throw error
+        }
+
     }
 
 
     async update(id: number, updateProjectDto: UpdateProjectDto, user: User) {
-        const project = await this.findOne(id, user)
+        try {
+            const project = await this.findOne(id, user)
 
-        if (project.ownerId !== user.id && user.role !== Role.SUPER_ADMIN) throw new ForbiddenException("Access denied")
+            if (project.ownerId !== user.id && user.role !== Role.SUPER_ADMIN) throw new ForbiddenException("Access denied")
 
-        return this.prisma.project.update({
-            where: {id},
-            data: updateProjectDto,
-            include: {
-                owner: {
-                    select: { id: true, name: true, email: true },
+            return this.prisma.project.update({
+                where: {id},
+                data: updateProjectDto,
+                include: {
+                    owner: {
+                        select: { id: true, name: true, email: true },
+                    }
                 }
-            }
-        })
+            })
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsService");
+        }
 
     }
 
     async remove(id: number, user: User) {
-        const project = await this.findOne(id, user)
+        try {
+            const project = await this.findOne(id, user)
 
-        if(project.ownerId !== user.id && user.role !== Role.SUPER_ADMIN) throw new ForbiddenException("Access denied")
+            if(project.ownerId !== user.id && user.role !== Role.SUPER_ADMIN) throw new ForbiddenException("Access denied")
 
-        return this.prisma.project.delete({
-            where: {id},
-        })
+            return this.prisma.project.delete({
+                where: {id},
+            })
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsService");
+        }
     }
 
 
