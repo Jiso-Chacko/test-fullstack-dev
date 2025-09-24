@@ -1,4 +1,4 @@
-****# Nricher API - Full-Stack Developer Test
+# Nricher API - Full-Stack Developer Test
 
 A NestJS REST API for project and analysis management with role-based access control.
 
