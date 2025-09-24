@@ -97,7 +97,7 @@ export class ProjectsService {
                 },
                 include: {
                     owner: {
-                        select: { id: true, name: true, createdAt: true },
+                        select: { id: true, name: true, email: true },
                     },
                     analyses: {
                         select: { id: true, name: true, createdAt: true },
