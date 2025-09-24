@@ -14,32 +14,50 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { AuthGuard } from "../common/guards/auth.guard";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { CustomLoggerService } from "../common/logger/logger.service";
 import type {Project, User} from "@prisma/client";
 
 @Controller('projects')
 @UseGuards(AuthGuard)
 export class ProjectsController {
-    constructor(private readonly projectsService: ProjectsService) {}
+    constructor(
+        private readonly projectsService: ProjectsService,
+        private logger: CustomLoggerService
+    ) {}
 
     @Post()
     async create(
         @Body() createProjectDto: CreateProjectDto,
         @CurrentUser() user: User,
     ) {
-        return this.projectsService.create(createProjectDto, user);
+        try {
+            return this.projectsService.create(createProjectDto, user);
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsController");
+            throw error
+        }
     }
 
     @Get()
     async findAll(@CurrentUser() user: User) {
-        console.log("Inside project controller")
-        return this.projectsService.findAll(user)
+        try {
+            return this.projectsService.findAll(user)
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsController");
+            throw error;
+        }
     }
 
     @Get(':id')
     async findOne(
         @Param('id', ParseIntPipe) id: number,
         @CurrentUser() user: User) {
-        return this.projectsService.findOne(id, user)
+        try {
+            return this.projectsService.findOne(id, user)
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsController");
+            throw error;
+        }
     }
 
     @Patch(':id')
@@ -48,13 +66,23 @@ export class ProjectsController {
         @Body() updateProjectDto: UpdateProjectDto,
         @CurrentUser() user: User,
     ){
-        return this.projectsService.update(id, updateProjectDto, user)
+        try {
+            return this.projectsService.update(id, updateProjectDto, user)
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsController");
+            throw error;
+        }
     }
 
     @Delete(':id')
     async remove(@Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: User) {
-        return this.projectsService.remove(id, user)
+        try {
+            return this.projectsService.remove(id, user)
+        }catch (error) {
+            this.logger.error(error.message, error.stack, "ProjectsController");
+            throw error;
+        }
     }
 
 }
