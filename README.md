@@ -167,4 +167,4 @@ test/                 # E2E tests
 logs/                # Application logs
 ```
 ## Future Work
-- To imporve performance by caching frequent queries to reduce database load.
+- **Caching with redis**: To imporve performance by caching frequent queries to reduce database load.
