@@ -8,7 +8,7 @@ export class AuthService {
 
     async  getUserById(userId: number): Promise<User> {
         const user = await this.prisma.user.findUnique({
-            where: {id: userId}
+            where: {id:  userId}
         })
 
         if(!user) throw new UnauthorizedException("User not found")

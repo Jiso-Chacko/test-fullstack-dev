@@ -5,10 +5,10 @@ export class CreateProjectDto {
     @IsString()
     @IsNotEmpty()
     name: string;
-    @IsArray()
+
     @IsOptional()
+    @IsArray()
     @IsInt({ each: true })
     @Type(() => Number)
-    @Transform((value) => value  || [])
-    userIds: number[] = [];
+    userIds?: number[];
 }
