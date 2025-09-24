@@ -53,6 +53,7 @@ export class ProjectsService {
             return project;
         }catch (error) {
             this.logger.error(error.message, error.stack, "ProjectsService");
+            throw error
         }
     }
 

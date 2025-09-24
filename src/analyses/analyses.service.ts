@@ -29,7 +29,7 @@ export class AnalysesService {
         return hasExplicitAccess;
     }
 
-    async  create(projectId: number, createAnlysesDto: CreateAnalysesDto, user: User) {
+    async create(projectId: number, createAnlysesDto: CreateAnalysesDto, user: User) {
         try {
             const project = await this.prisma.project.findUnique({
                 where: { id: projectId },
@@ -59,8 +59,8 @@ export class AnalysesService {
             })
         }catch (error) {
             this.logger.error(error.message, error.stack, "AnalysesService");
+            throw error
         }
-
     }
 
     async findAllByProject(projectId: number, user: User) {
@@ -91,6 +91,7 @@ export class AnalysesService {
             })
         }catch (error) {
             this.logger.error(error.message, error.stack, "AnalysesService");
+            throw error
         }
     }
 
@@ -147,6 +148,7 @@ export class AnalysesService {
             })
         }catch (error) {
             this.logger.error(error.message, error.stack, "AnalysesService");
+            throw error
         }
     }
 
@@ -162,6 +164,7 @@ export class AnalysesService {
             })
         }catch (error) {
             this.logger.error(error.message, error.stack, "AnalysesService");
+            throw  error
         }
     }
 
