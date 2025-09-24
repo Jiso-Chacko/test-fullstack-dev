@@ -8,20 +8,21 @@ export class AuthGuard implements CanActivate {
     async  canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
 
+
         const userId = request.headers['x-user-id'];
         const userEmail = request.headers['x-user-email'];
-
 
         if (!userEmail && !userEmail) throw  new UnauthorizedException("Authentication failed, Please try using user id or user email");
 
         try {
             let user;
-            if (userId) user = await this.authService.getUserById(userId);
+            if (userId) user = await this.authService.getUserById(parseInt(userId, 10));
             else if(userEmail) user = await this.authService.getUserByEmail(userEmail);
 
             request.user = user;
             return true
         }catch (error) {
+            console.log(error)
             throw new UnauthorizedException("Invalid Credentials");
         }
     }
